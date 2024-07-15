@@ -5,17 +5,17 @@ runs:
   using: 'composite'
   steps:
     - name: Install node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version-file: '.nvmrc'
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.x'
 
     - name: Cache Desktop node_modules
       id: cache-desktop-modules
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       if: runner.os != 'Windows'
       with:
         path: node_modules
@@ -23,14 +23,24 @@ runs:
 
     # Not having this will break the windows build because the PATH won't be set by msbuild.
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.3.1
+      uses: microsoft/setup-msbuild@v2
       if: runner.os == 'Windows'
+      with:
+        msbuild-architecture: arm64
 
-    - name: Setup node for windows
+    - name: Setup node for windows arm64
       if: runner.os == 'Windows'
       shell: bash
       run: |
+        set npm_config_arch=arm64
         yarn global add node-gyp@latest
+
+    - name: Setup node for linux arm64
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        apt install -y libc6-dev-arm64-cross linux-libc-dev-arm64-cross g++-aarch64-linux-gnu
+        set npm_config_arch=arm64
 
     - name: Install dependencies
       shell: bash
